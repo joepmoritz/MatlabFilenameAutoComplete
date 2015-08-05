@@ -2,7 +2,7 @@ import sublime, sublime_plugin
 import os
 
 
-class MatlabAutoComplete(sublime_plugin.EventListener):
+class MatlabFilenameAutoComplete(sublime_plugin.EventListener):
 	def on_query_completions(self, view, prefix, locations):
 		scope = view.scope_name(view.sel()[0].begin());
 
