@@ -7,8 +7,8 @@ class MatlabFilenameAutoComplete(sublime_plugin.EventListener):
 		self.max_depth = 8
 		self.depth = 0
 
-		self.fun_reg = re.compile(r'function.+[\s=]([a-zA-Z]\w*\s*\(.*\))')
-		self.param_reg = re.compile(r'[\(,]?\s*([a-zA-Z]+[a-zA-Z0-9_]*)\s*[\),]?')
+		self.fun_reg = re.compile(r'function.*[\s=][a-zA-Z]\w*\s*\(.*\)')
+		self.param_reg = re.compile(r'([a-zA-Z]\w*)\s*[\),]')
 
 	def on_query_completions(self, view, prefix, locations):
 		scope = view.scope_name(view.sel()[0].begin());
@@ -32,13 +32,13 @@ class MatlabFilenameAutoComplete(sublime_plugin.EventListener):
 				(trigger, content) = (f, f)
 				if ext == '.m':
 					with open(full_f, 'r') as fh:
-						func = self.fun_reg.findall(fh.readline())
-						if len(func) > 0:
-							params = self.param_reg.findall(func[0])
+						func = fh.readline()
+						if self.fun_reg.match(func):
+							params = self.param_reg.findall(func)
 							trigger += '('
 							content += '('
 							nParam = len(params)
-							for ii in range(1,nParam):
+							for ii in range(0, nParam):
 								content += '${' + str(ii) + ':' + params[ii] + '}' + (', ' if ii!=nParam-1 else '')
 								trigger += params[ii] + (', ' if ii!=nParam-1 else '')
 							content += ')'
