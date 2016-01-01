@@ -39,7 +39,7 @@ class MatlabFilenameAutoComplete(sublime_plugin.EventListener):
 							content += '('
 							nParam = len(params)
 							for ii in range(0, nParam):
-								content += '${' + str(ii) + ':' + params[ii] + '}' + (', ' if ii!=nParam-1 else '')
+								content += '${' + str(ii+1) + ':' + params[ii] + '}' + (', ' if ii!=nParam-1 else '')
 								trigger += params[ii] + (', ' if ii!=nParam-1 else '')
 							content += ')'
 							trigger += ')'
