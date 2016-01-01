@@ -17,11 +17,12 @@ class MatlabFilenameAutoComplete(sublime_plugin.EventListener):
 
 		completions = []
 		for folder in sublime.active_window().folders():
-			completions += self.__get_completions(folder)
+			completions += self.__get_completions(folder, prefix)
 
-		return completions
+		completions += view.extract_completions(prefix)
+		return (completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
 
-	def __get_completions(self, folder):
+	def __get_completions(self, folder, prefix):
 		self.depth += 1
 		completions = []
 		for f in os.listdir(folder):
@@ -35,7 +36,7 @@ class MatlabFilenameAutoComplete(sublime_plugin.EventListener):
 						func = fh.readline()
 						if self.fun_reg.match(func):
 							params = self.param_reg.findall(func)
-							trigger += '('
+							trigger += '\t('
 							content += '('
 							nParam = len(params)
 							for ii in range(0, nParam):
@@ -43,8 +44,10 @@ class MatlabFilenameAutoComplete(sublime_plugin.EventListener):
 								trigger += params[ii] + (', ' if ii!=nParam-1 else '')
 							content += ')'
 							trigger += ')'
-				completions.append([trigger, content])
+						else:
+							trigger += '\tScript'
+				completions.append((trigger, content))
 			elif os.path.isdir(full_f) and self.depth < self.max_depth:
-				completions += self.__get_completions(full_f)
+				completions += self.__get_completions(full_f, prefix)
 		self.depth -= 1
 		return completions
