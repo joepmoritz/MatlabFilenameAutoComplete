@@ -1,13 +1,18 @@
 import sublime, sublime_plugin
-import os
+import os, re
+
 
 class MatlabFilenameAutoComplete(sublime_plugin.EventListener):
+
 	def on_query_completions(self, view, prefix, locations):
-		self.max_depth = 8
 		scope = view.scope_name(view.sel()[0].begin());
 
 		if not scope.startswith('source.matlab'):
 			return None
+
+		self.max_depth = 8
+		self.fun_reg = re.compile(r'function.+[a-zA-Z]+[a-zA-Z0-9_]*\(.*\).*')
+		self.fun_line_reg = re.compile(r'[a-zA-Z]+[a-zA-Z0-9_]*\(.*\)')
 
 		completions = []
 		for folder in sublime.active_window().folders():
@@ -21,15 +26,19 @@ class MatlabFilenameAutoComplete(sublime_plugin.EventListener):
 		completions = []
 		for f in os.listdir(folder):
 			if f.startswith('.'): continue
-			if not f.endswith('.m'): 
-				full_f = os.path.join(folder, f)
+			full_f = os.path.join(folder, f)
+			if os.path.isfile(full_f) and f.endswith( ('.m','.dll','.mexa64','mexmaci64','mexw32') ): 
+				func = f[:-2]
+				if f.endswith('.m'):
+					fh = open(full_f, 'r')
+					rdstr = fh.readline()
+					if self.fun_reg.match(rdstr):
+						m = self.fun_line_reg.search(rdstr)
+						func = m.group()
+				completions.append([func, func])
+			else:
 				if os.path.isdir(full_f) and self.depth < self.max_depth:
 					completions.extend(self.__get_completions(full_f))
-					continue
-				else:
-					continue
-			f = f[:-2]
-			completions.append([f, f])
 		self.depth -= 1
 		if completions.count == 0:
 			return None
