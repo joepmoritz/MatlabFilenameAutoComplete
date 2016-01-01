@@ -30,11 +30,11 @@ class MatlabFilenameAutoComplete(sublime_plugin.EventListener):
 			if os.path.isfile(full_f) and f.endswith( ('.m','.dll','.mexa64','mexmaci64','mexw32') ): 
 				func = f[:-2]
 				if f.endswith('.m'):
-					fh = open(full_f, 'r')
-					rdstr = fh.readline()
-					if self.fun_reg.match(rdstr):
-						m = self.fun_line_reg.search(rdstr)
-						func = m.group()
+					with open(full_f, 'r') as fh:
+						rdstr = fh.readline()
+						if self.fun_reg.match(rdstr):
+							m = self.fun_line_reg.search(rdstr)
+							func = m.group()
 				completions.append([func, func])
 			else:
 				if os.path.isdir(full_f) and self.depth < self.max_depth:
