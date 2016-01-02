@@ -3,9 +3,12 @@ import os, re
 
 class MatlabFilenameAutoComplete(sublime_plugin.EventListener):
 	def __init__(self):
+		# invoked when loading plugin.
 		super(MatlabFilenameAutoComplete, self).__init__()
-		self.max_depth = 8
+		self.max_depth = 10
 		self.depth = 0
+		self.completion_cached = False
+		self.cache = []
 
 		self.fun_reg = re.compile(r'function.*[\s=][a-zA-Z]\w*\s*\((.*\))')
 		self.param_reg = re.compile(r'([a-zA-Z]\w*)\s*[\),]')
@@ -15,12 +18,20 @@ class MatlabFilenameAutoComplete(sublime_plugin.EventListener):
 		if not scope.startswith('source.matlab'):
 			return None
 
-		completions = []
-		for folder in sublime.active_window().folders():
-			completions += self.__get_completions(folder, prefix)
+		if not self.completion_cached:
+			for folder in sublime.active_window().folders():
+				self.cache += self.__get_completions(folder, prefix)
+			self.completion_cached = True
 
-		completions += view.extract_completions(prefix)
+		completions = self.cache + view.extract_completions(prefix)
 		return (completions, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS)
+
+	def on_activated(self, view):
+		scope = view.scope_name(view.sel()[0].begin());
+		if not scope.startswith('source.matlab'):
+			return
+		self.completion_cached = False
+		self.cache = []
 
 	def __get_completions(self, folder, prefix):
 		self.depth += 1
